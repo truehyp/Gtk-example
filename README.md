@@ -1,4 +1,4 @@
-gtk-example
+Gtk-example
 ===========
 
-一些gtk的小例子
+一些Gtk+的小例子
