@@ -7,7 +7,11 @@ struct {
 
 static cairo_surface_t *surface = NULL;
 
-static void do_drawing(GtkWidget *widget)
+/*
+ * 在surface上绘制一条直线
+ */
+static void 
+do_drawing(GtkWidget *widget)
 {
 	cairo_t *cr;
 	cr = cairo_create (surface);
@@ -22,7 +26,11 @@ static void do_drawing(GtkWidget *widget)
 	gtk_widget_queue_draw (widget);
 }
 
-static void clear_surface (GtkWidget *widget)
+/*
+ * 清空surface
+ */
+static void
+clear_surface (GtkWidget *widget)
 {
 	cairo_t *cr;
 
@@ -33,7 +41,13 @@ static void clear_surface (GtkWidget *widget)
 	cairo_destroy (cr);
 	gtk_widget_queue_draw (widget);
 }
-static gboolean button_press (GtkWidget *widget, 
+
+/*
+ * 鼠标左键按下时，记录坐标
+ * 鼠标右键按下时，清空绘图区域。
+ */
+static gboolean 
+button_press (GtkWidget *widget, 
 							GdkEventButton *event,
 							gpointer user_date)
 {
@@ -41,52 +55,64 @@ static gboolean button_press (GtkWidget *widget,
 	{
 		glob.x[0] = event->x;
 		glob.y[0] = event->y;
-		g_print ("button = 1, x = %lf	y = %lf\n", event->x, event->y);
+		//g_print ("button = 1, x = %lf	y = %lf\n", event->x, event->y);
 	}
 	if (event->button == 3)
 		clear_surface(widget);
-		g_print ("button = 3, x = %lf   y = %lf\n", event->x, event->y);
+		//g_print ("button = 3, x = %lf   y = %lf\n", event->x, event->y);
 	return TRUE;
 }
 
-static gboolean button_release (GtkWidget *widget,
-								GdkEventButton *event,
-								gpointer user_date)
+/*
+ * 鼠标左键松开时，记录下第二个坐标并绘制直线
+ */
+static gboolean
+button_release (GtkWidget *widget,
+				GdkEventButton *event,
+				gpointer user_date)
 {
 	if (event->button == 1)
 	{
 		glob.x[1] = event->x;
 		glob.y[1] = event->y;
 		do_drawing(widget);
-		g_print ("in release button = 1, x = %lf	y = %lf\n", event->x, event->y);
+		//g_print ("in release button = 1, x = %lf	y = %lf\n", event->x, event->y);
 	}
 	return TRUE;
 }
 
-static void draw_event (GtkWidget *widget, cairo_t *cr, gpointer user_date)
+/*
+ * 根据cr绘制surface
+ */
+static void
+draw_event (GtkWidget *widget,
+	   		cairo_t *cr,
+		   	gpointer user_date)
 {
 	cairo_set_source_surface (cr, surface, 0, 0);
 	cairo_paint (cr);
 }
 
 	
-static gboolean configure_event (GtkWidget *widget,
-								GdkEventConfigure *event,
-								gpointer data)
+/*
+ * 当widget大小改变时，重新创建一个适合大小的surface并清空新surface。
+ */
+static gboolean
+configure_event (GtkWidget *widget,
+	   			GdkEventConfigure *event,
+				gpointer data)
 {
 	if (surface)
 		cairo_surface_destroy (surface);
 	surface = gdk_window_create_similar_surface (gtk_widget_get_window(widget), CAIRO_CONTENT_COLOR, gtk_widget_get_allocated_width(widget), gtk_widget_get_allocated_height (widget));
-	cairo_t *cr;
-	cr = cairo_create (surface);
-	cairo_set_source_rgb (cr, 1, 1, 1);
-	cairo_paint (cr);
-	cairo_destroy (cr);
+
+	clear_surface(widget);
 
 	return TRUE;
 }
 
-int main (int argc, char *argv[])
+int 
+main (int argc, char *argv[])
 {
 	GtkWidget *window;
 	GtkWidget *darea;
@@ -101,7 +127,9 @@ int main (int argc, char *argv[])
 
 	g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
+	/*鼠标按钮下压信号*/
 	g_signal_connect (darea, "button-press-event", G_CALLBACK(button_press),NULL);
+	/*鼠标按钮释放信号*/
 	g_signal_connect (darea, "button-release-event", G_CALLBACK(button_release), NULL);
 	/*重绘时发出信号*/
 	g_signal_connect (darea, "draw", G_CALLBACK (draw_event), NULL);
